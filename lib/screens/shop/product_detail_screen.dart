@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../repositories/product_repository.dart';
@@ -49,8 +50,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (product.img != null)
-                  Image.network(
-                    product.img!,
+                  CachedNetworkImage(
+                    imageUrl: product.img!,
                     width: double.infinity,
                     height: 500,
                     fit: BoxFit.cover,

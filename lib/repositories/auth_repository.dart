@@ -24,21 +24,11 @@ class AuthRepository {
   }
 
   Future<void> signUp(String email, String password, String name) async {
-    final response = await _client.auth.signUp(
+    await _client.auth.signUp(
       email: email,
       password: password,
+      data: {'nom': name},
     );
-    
-    if (response.user != null) {
-      // Create profile record (assumes 'profiles' table exists and trigger is set up, 
-      // or we do it manually here if no trigger exists).
-      await _client.from('profiles').insert({
-        'id': response.user!.id,
-        'nom': name,
-        'email': email,
-        'role': 'Client', // Default role
-      });
-    }
   }
 
   Future<void> signOut() async {

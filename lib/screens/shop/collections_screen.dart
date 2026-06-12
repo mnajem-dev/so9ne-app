@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../repositories/product_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../repositories/auth_repository.dart';
@@ -134,7 +135,7 @@ class CollectionsScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(8),
                                 image: product.img != null
                                     ? DecorationImage(
-                                        image: NetworkImage(product.img!),
+                                        image: CachedNetworkImageProvider(product.img!),
                                         fit: BoxFit.cover,
                                       )
                                     : null,

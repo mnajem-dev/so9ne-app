@@ -28,33 +28,13 @@ class OrderRepository {
   Future<void> createOrder({
     required String userId,
     required double total,
-    required List<Map<String, dynamic>> items, // Map containing id_product, quantite, prix_unit, taille_choisie
+    required List<Map<String, dynamic>> items,
   }) async {
-    // 1. Insert order
-    final orderResponse = await _client.from('orders').insert({
-      'id_user': userId,
-      'date_commande': DateTime.now().toIso8601String(),
-      'total': total,
-      'statut': 'en cours', // Initial status
-    }).select().single();
-
-    final int orderId = orderResponse['id'];
-
-    // 2. Insert order details
-    final orderDetails = items.map((item) {
-      return {
-        'id_order': orderId,
-        'id_product': item['id_product'],
-        'quantite': item['quantite'],
-        'prix_unit': item['prix_unit'],
-        'taille_choisie': item['taille_choisie'],
-      };
-    }).toList();
-
-    await _client.from('order_details').insert(orderDetails);
-    
-    // Note: In a production app, you would also decrease the product stock here
-    // by iterating over items and updating the products table.
+    await _client.rpc('place_order', params: {
+      'p_user_id': userId,
+      'p_total': total,
+      'p_items': items,
+    });
   }
 
   // Client: Get their own orders
@@ -87,16 +67,8 @@ class OrderRepository {
 
   // Admin: Total Sales Stats
   Future<double> getTotalSales() async {
-    final response = await _client
-        .from('orders')
-        .select('total')
-        .inFilter('statut', ['payée', 'livrée', 'en cours']); // Exclude 'annulée'
-    
-    double total = 0;
-    for (var row in response) {
-      total += (row['total'] as num).toDouble();
-    }
-    return total;
+    final response = await _client.rpc('get_total_sales');
+    return (response as num).toDouble();
   }
 
   // Admin: Update order status

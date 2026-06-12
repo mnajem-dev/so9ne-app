@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
@@ -94,7 +95,7 @@ class AdminInventoryScreen extends ConsumerWidget {
               final product = products[index];
               return ListTile(
                 leading: product.img != null 
-                    ? Image.network(product.img!, width: 50, height: 50, fit: BoxFit.cover)
+                    ? CachedNetworkImage(imageUrl: product.img!, width: 50, height: 50, fit: BoxFit.cover)
                     : const Icon(Icons.image_not_supported),
                 title: Text(product.nom, style: Theme.of(context).textTheme.bodyLarge),
                 subtitle: Text('\$${product.prix.toStringAsFixed(2)} - Stock: ${product.stock}'),

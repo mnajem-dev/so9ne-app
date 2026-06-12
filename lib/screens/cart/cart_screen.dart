@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/cart_provider.dart';
 import '../../repositories/order_repository.dart';
@@ -104,7 +105,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                               borderRadius: BorderRadius.circular(8),
                               image: item.product.img != null
                                   ? DecorationImage(
-                                      image: NetworkImage(item.product.img!),
+                                      image: CachedNetworkImageProvider(item.product.img!),
                                       fit: BoxFit.cover,
                                     )
                                   : null,

@@ -31,6 +31,8 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+String? _cachedUserRole;
+
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
@@ -39,24 +41,37 @@ final GoRouter appRouter = GoRouter(
     final session = Supabase.instance.client.auth.currentSession;
     final isAuthRoute = state.matchedLocation == '/login';
     
-    if (session == null && !isAuthRoute) {
-      return '/login';
+    if (session == null) {
+      _cachedUserRole = null;
+      return isAuthRoute ? null : '/login';
     }
     
-    if (session != null && isAuthRoute) {
+    if (_cachedUserRole == null) {
       try {
         final response = await Supabase.instance.client
             .from('profiles')
             .select('role')
             .eq('id', session.user.id)
             .single();
-        final role = response['role'] as String?;
-        if (role == 'Admin') {
-          return '/admin';
-        }
+        _cachedUserRole = response['role'] as String?;
       } catch (e) {
         debugPrint('Error fetching role: $e');
+        _cachedUserRole = 'Client';
       }
+    }
+    
+    final isAdmin = _cachedUserRole == 'Admin';
+    final isAdminRoute = state.matchedLocation.startsWith('/admin');
+    
+    if (isAuthRoute) {
+      return isAdmin ? '/admin' : '/';
+    }
+    
+    if (isAdmin && state.matchedLocation == '/') {
+      return '/admin';
+    }
+    
+    if (!isAdmin && isAdminRoute) {
       return '/';
     }
     

@@ -84,10 +84,9 @@ class ProductRepository {
 
   // Admin/System: Update Stock
   Future<void> updateStock(int id, int quantityChange) async {
-    // In a real app, you might use an RPC for atomic increment/decrement to prevent race conditions.
-    // For now, we fetch current stock and update.
-    final currentProduct = await getProductById(id);
-    final newStock = currentProduct.stock + quantityChange;
-    await _client.from('products').update({'stock': newStock}).eq('id', id);
+    await _client.rpc('increment_stock', params: {
+      'p_id': id,
+      'p_quantity_change': quantityChange,
+    });
   }
 }
