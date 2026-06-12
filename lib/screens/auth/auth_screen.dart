@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../repositories/auth_repository.dart';
 import '../../theme/app_theme.dart';
 
@@ -11,6 +12,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
@@ -27,6 +29,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
     try {
       final authRepo = ref.read(authRepositoryProvider);
@@ -43,10 +47,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         );
       }
       // If successful, GoRouter will handle redirection via auth state change
+    } on AuthException catch (e) {
+      if (mounted) {
+        String friendlyMessage = e.message;
+        if (e.message.toLowerCase().contains('invalid login credentials')) {
+          friendlyMessage = 'Incorrect email or password. Please try again.';
+        } else if (e.message.toLowerCase().contains('already registered')) {
+          friendlyMessage = 'Looks like you already have an account! Try signing in.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(friendlyMessage), backgroundColor: AppTheme.errorColor),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.errorColor),
+          SnackBar(content: Text('An unexpected error occurred. Please try again.'), backgroundColor: AppTheme.errorColor),
         );
       }
     } finally {
@@ -62,9 +78,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 64.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Text(
                 'So9ne',
                 style: Theme.of(context).textTheme.displayMedium,
@@ -78,26 +96,50 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ),
               const SizedBox(height: 64),
               if (!_isLogin) ...[
-                TextField(
+                TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Full Name'),
                   textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please tell us your name.';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
               ],
-              TextField(
+              TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email Address'),
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter your email address.';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email address.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
-              TextField(
+              TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
+                onFieldSubmitted: (_) => _submit(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password.';
+                  }
+                  if (value.length < 6) {
+                    return 'Oops! Your password must be at least 6 characters.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 48),
               SizedBox(
@@ -124,6 +166,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),
